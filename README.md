@@ -5,6 +5,27 @@ Purpose: ping all usable hosts in your network, one time, with delay and without
 
 P.S: python3 env ipaddress subprocess
 
+# Installation
+
+Simply clone the repo and run
+
+```
+cd ping_network
+python setup.py install
+```
+
+Now, by just running
+
+```
+ping_network
+```
+
+You will be able to use the tool!
+
+# Collaborators
+
+Walter Danilo Galante @devilicecream
+
 Copyright (C) 2017  Dario Lynx
 
 This program is free software: you can redistribute it and/or modify

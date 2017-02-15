@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
 # Ping all IP in your network
 # It need "netinfo.py" for work, then
 # you must use super user powers #
 # Author : Dario Lynx
+# Edited : Walter Danilo Galante
 # Name   : ping_network.py
 # Purpose: Ping all IP in your network
 # Country: Italy
@@ -10,26 +13,43 @@
 #
 
 # Import user's modules
-from netinfo import *
+from .netinfo import NetworkProperties
 # Import builtin modules
-import subprocess
+import os
 import ipaddress
 
-# Returns an iterator over the usable hosts in the network.
-# The usable hosts are all the IP addresses that belong to the network,
-# except the network address itself and the network broadcast address.
-all_hosts = list(ipaddress.IPv4Interface(get_ip() + '/' + get_netmask()).network.hosts())
 
-# For each IP address in the subnet, run the ping command
-for i in range(len(all_hosts)):
-    output = subprocess.Popen(['ping', '-c', '1', '-W 10', str(all_hosts[i])], stdout=subprocess.PIPE).communicate()[0]
-    if "Destination Host Unreachable" in output.decode('utf-8'):
-        pass
-#        print(str(all_hosts[i]), "is Offline -> Destination Host Unreachable")
-    elif "Request timed out" in output.decode('utf-8'):
-        print(str(all_hosts[i]), "is Offline -> Request timed out")
-    else:
-        print(str(all_hosts[i]), "is Online")
+__all__ = ["NetworkProperties", "main"]
+
+
+def main():
+    np = NetworkProperties()
+    # Returns an iterator over the usable hosts in the network.
+    # The usable hosts are all the IP addresses that belong to the network,
+    # except the network address itself and the network broadcast address.
+    all_hosts = list(ipaddress.IPv4Interface(np.ip_addr + '/' + str(np.cidr)).network.hosts())
+
+    # For each IP address in the subnet, run the ping command
+    for i in range(len(all_hosts)):
+        # Using os.system instead of subprocess, we obtain easily the return code.
+        # Since ping returns 0 if it receives a "pong", and a different value
+        # if not, it's easy to guess which hosts are online and which are not.
+        # This approach has also the perk of being platform independent, since
+        # it's not based on the output of ping on the stdout.
+        output = os.system("ping -c 1 -W 1 %s > /dev/null" % str(all_hosts[i]))
+        if output == 256:
+            print(str(all_hosts[i]), "is Offline -> Destination Host Unreachable")
+        elif output == 2:
+            print("User interrupted.")
+            break
+        elif output != 0:
+            print(str(all_hosts[i]), "is Offline -> Request timed out. Status: ", output)
+        else:
+            print(str(all_hosts[i]), "is Online")
+            
+
+if __name__ == "__main__":
+    main()
 
 ########################################################################
 #ping_network is a python3 software that Ping all IP in your network
